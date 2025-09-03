@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>مطعم ميتزون — عروضنا </title>
+  <style>
+    :root {
+      --bg: #0b0b0b;
+      --fg: #f5f5f5;
+      --accent: #eab308;
+      --radius: 18px;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+    }
+    .menu-btn {
+      position: fixed;
+      top: 16px;
+      inset-inline-end: 16px;
+      z-index: 60;
+      padding: .8rem 1.1rem;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, .4); /* تم تعديل الخلفية إلى الشكل الخفيف */
+      color: var(--fg);
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+    .menu-btn:hover {
+      background: var(--accent);
+      color: var(--bg);
+    }
+    .hero {
+      position: relative;
+      min-height: 72vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.7);
+    }
+    .mute-btn {
+      position: absolute;
+      bottom: 20px;
+      inset-inline-end: 20px;
+      z-index: 50;
+      padding: .6rem 1rem;
+      border: none;
+      border-radius: var(--radius);
+      background: rgba(0, 0, 0, .5);
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .mute-btn:hover {
+      background: rgba(0, 0, 0, .8);
+    }
+    .logo {
+      position: absolute;
+      top: 18px;
+      inset-inline-start: 16px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, .45);
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      color: var(--fg);
+    }
+    .logo img {
+      width: 48px;
+      height: 48px;
+      margin-inline-end: 8px;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 40;
+      text-align: center;
+      width: 100%;
+      color: #fff;
+      padding: 0 10px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    }
+    .hero-content h1 {
+      font-size: 3em;
+      margin-bottom: 10px;
+    }
+    .section {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 10px;
+      overflow: hidden;
+    }
+    h2 {
+      text-align: center;
+      font-size: 2.5em;
+      color: var(--accent);
+      margin-bottom: 30px;
+      position: relative;
+      padding-bottom: 10px;
+    }
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    .carousel {
+      overflow-x: auto; /* تمكين التمرير اليدوي */
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+      padding: 10px 0;
+    }
+    .track {
+      display: flex;
+      gap: 15px;
+      /* تم حذف انتقال الحركة التلقائية */
+    }
+    .slide {
+      flex: 0 0 auto;
+      width: 90%;
+      max-width: 400px;
+      scroll-snap-align: start;
+      box-sizing: border-box;
+      cursor: pointer; /* مؤشر اليد للإشارة إلى إمكانية النقر */
+    }
+    .card {
+      aspect-ratio: 16/9;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+    }
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    .card img:hover {
+      transform: scale(1.02); /* تكبير خفيف عند التمرير عليها */
+    }
+    footer {
+      background: rgba(0, 0, 0, 0.3);
+      color: rgba(255, 255, 255, 0.6);
+      padding: 20px;
+      text-align: center;
+      margin-top: 50px;
+      font-size: 0.9em;
+    }
+    /* استجابة الكاروسيل للشاشات الأصغر */
+    @media (min-width: 768px) {
+      .slide {
+        width: calc(50% - 15px);
+      }
+    }
+    @media (min-width: 1024px) {
+      .slide {
+        width: calc(33.333% - 15px);
+      }
+    }
+
+    /* تصميم النافذة المنبثقة (Modal) */
+    .modal {
+      display: none; /* إخفاء النافذة افتراضيًا */
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.9); /* خلفية سوداء شفافة */
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      margin: auto;
+      display: block;
+      width: 90%;
+      max-width: 800px;
+      border-radius: var(--radius);
+    }
+    .close {
+      position: absolute;
+      top: 20px;
+      right: 35px;
+      color: #f1f1f1;
+      font-size: 40px;
+      font-weight: bold;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+    .close:hover,
+    .close:focus {
+      color: #bbb;
+      text-decoration: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <a class="menu-btn" href="index.html">قائمة الطعام</a>
+
+  <header class="hero">
+    <video id="heroVideo" src="Media/Video.mp4" autoplay muted playsinline loop>
+      متصفحك لا يدعم تشغيل الفيديو.
+    </video>
+    <button class="mute-btn" id="muteBtn">🔇 صامت</button>
+    <div class="logo">
+      <img src="LogoMeat-Zone.png" alt="شعار المطعم" />
+      <strong>Meat-Zone</strong>
+    </div>
+    
+  </header>
+
+  <section class="section">
+    <h2>عروضنا</h2>
+    <div class="carousel" id="carousel">
+      <div class="track" id="track">
+        <div class="slide"><figure class="card"><img src="Media/1.jpeg" alt="عرض 1"></figure></div>
+        <div class="slide"><figure class="card"><img src="Media/2.jpeg" alt="عرض 2"></figure></div>
+        <div class="slide"><figure class="card"><img src="Media/3.jpeg" alt="عرض 3"></figure></div>
+        <div class="slide"><figure class="card"><img src="Media/4.jpeg" alt="عرض 4"></figure></div>
+        <div class="slide"><figure class="card"><img src="Media/5.jpeg" alt="عرض 5"></figure></div>
+        <div class="slide"><figure class="card"><img src="Media/6.jpeg" alt="عرض 6"></figure></div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="text-align:center;padding:20px;opacity:.7;">© <span id="year"></span>مطعم ميتزون</footer>
+
+  <div id="myModal" class="modal">
+    <span class="close">&times;</span>
+    <img class="modal-content" id="modalImage">
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    const video = document.getElementById('heroVideo');
+    const muteBtn = document.getElementById('muteBtn');
+
+    if (video) {
+      muteBtn.addEventListener('click', () => {
+        if (video.muted) {
+          video.muted = false;
+          muteBtn.textContent = '🔊 صوت';
+        } else {
+          video.muted = true;
+          muteBtn.textContent = '🔇 صامت';
+        }
+      });
+    }
+
+    // كود ميزة التكبير
+    const modal = document.getElementById('myModal');
+    const modalImg = document.getElementById('modalImage');
+    const slides = document.querySelectorAll('.slide img');
+
+    slides.forEach(img => {
+      img.addEventListener('click', () => {
+        modal.style.display = 'flex';
+        modalImg.src = img.src;
+      });
+    });
+
+    // لإغلاق النافذة عند النقر على علامة X أو أي مكان خارج الصورة
+    const closeModal = document.querySelector('.close');
+    closeModal.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
