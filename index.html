@@ -1,0 +1,1020 @@
+404: Not Found<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>قائمة طعام مطعم ميتزون</title>
+ <style>
+ @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+
+ body {
+ font-family: 'Tajawal', sans-serif;
+ background-color: #0d0d0d;
+ color: #fff;
+ margin: 0;
+ padding: 20px;
+ }
+
+
+.menu-btn {
+      position: fixed;
+      top: 16px;
+      inset-inline-end: 16px;
+      z-index: 60;
+      padding: .8rem 1.1rem;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, .6); /* خلفية أغمق قليلاً */
+      color: var(--fg);
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+  
+ .menu-container {
+ max-width: 1400px;
+ margin: auto;
+ background-color: #1a1a1a;
+ border: 1px solid #333;
+ padding: 30px;
+ border-radius: 10px;
+ display: grid;
+ gap: 20px;
+ grid-template-columns: repeat(4, 1fr);
+ grid-auto-rows: minmax(min-content, max-content);
+ position: relative;
+ overflow: hidden;
+ }
+
+ .menu-container::before {
+ /*
+ content: '';
+ position: absolute;
+ top: 50%;
+ left: 50%;
+ transform: translate(-50%, -50%);
+ width: 70%;
+ height: 70%;
+ background-image: url('your-logo.png');
+ background-repeat: no-repeat;
+ background-position: center;
+ background-size: contain;
+ opacity: 0.05;
+ z-index: 0;
+ */
+ }
+
+ .section {
+ border: 1px solid #333;
+ border-radius: 8px;
+ padding: 15px;
+ background-color: #222;
+ position: relative;
+ z-index: 1;
+ }
+
+ .section-header {
+ text-align: center;
+ font-size: 1.8em;
+ color: #e50914;
+ margin-bottom: 15px;
+ border-bottom: 1px solid #444;
+ padding-bottom: 10px;
+ }
+
+ .section-header span {
+ display: block;
+ font-size: 1.6em;
+ color: #e50914;
+ margin-top: 5px;
+ }
+
+ .item-list {
+ list-style: none;
+ padding: 0;
+ margin: 0;
+ }
+
+ .item {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ padding: 10px 0;
+ border-bottom: 1px dotted #444;
+ }
+
+ .item:last-child {
+ border-bottom: none;
+ }
+
+ .item-info {
+ display: flex;
+ flex-direction: column;
+ text-align: center;
+ flex-grow: 1;
+ align-items: center;
+ }
+
+ .item-name {
+ font-size: 1.1em;
+ margin: 0;
+ }
+
+ .item-translation {
+ font-size: 0.9em;
+ color: #aaa;
+ margin: 0;
+ }
+
+ .item-price-calories {
+ display: flex;
+ align-items: center;
+ font-size: 1em;
+ color: #e50914;
+ font-weight: bold;
+ flex-shrink: 0;
+ gap: 10px;
+ }
+
+ .item-price {
+ display: flex;
+ align-items: center;
+ }
+
+ .sar-icon {
+ width: 1em; /* يمكنك تعديل هذا الحجم */
+ height: 1em;
+ margin-right: 5px;
+ vertical-align: middle;
+ }
+
+ .item-calories::after {
+ content: 'سعرة - Cal';
+ margin-right: 5px;
+ font-size: 0.8em;
+ color: #aaa;
+ }
+
+ .item-description {
+ font-size: 0.9em;
+ color: #aaa;
+ margin-top: 5px;
+ text-align: center;
+ }
+
+ .sub-section-title {
+ text-align: center;
+ color: #ccc;
+ font-size: 1.2em;
+ margin: 10px 0;
+ border-bottom: 1px dotted #555;
+ padding-bottom: 5px;
+ }
+
+ .sub-section-title2nd {
+ text-align: center;
+ color: #FFF;
+ font-size: 1.6em;
+ /*margin: 10px 0;
+ border-bottom: 1px dotted #555;
+ padding-bottom: 5px;*/
+ }
+
+  .sub-section-title3th {
+ text-align: center;
+ color: #A52A2A;
+ font-size: 1em;
+ margin: 10px 0;
+ border-bottom: 1px dotted #555;
+ padding-bottom: 5px;
+ }
+
+ .logo-section {
+ grid-column: 1 / -1;
+ grid-row: 1;
+ text-align: center;
+ margin: 0 0 20px 0;
+ }
+
+ .logo-section img {
+ max-width: 250px;
+ }
+
+ .notes-section {
+ background-color: #2a2a2a;
+ padding: 15px;
+ border-radius: 8px;
+ text-align: center;
+ border: 1px solid #444;
+ margin-top: 20px;
+ }
+
+ .notes-section h3 {
+ color: #e50914;
+ margin-bottom: 10px;
+ }
+
+ .notes-section p {
+ margin: 5px 0;
+ font-size: 1em;
+ }
+
+ .notes-section-container {
+ grid-column: 1 / -1;
+ text-align: center;
+ margin-top: auto;
+ }
+
+ /* تحديد موضع الأقسام الرئيسية على شاشات الكمبيوتر 
+ .soup { grid-column: 1 / 2; grid-row: 2; }
+ .signature { grid-column: 2 / 3; grid-row: 2; }
+ .burger { grid-column: 3 / 4; grid-row: 2; }
+ .drinks { grid-column: 4 / 5; grid-row: 2; }
+ .salad { grid-column: 1 / 2; grid-row: 3; }
+ .appetizers { grid-column: 1 / 2; grid-row: 4; }
+ .smokemeat { grid-column: 2 / span 2; grid-row: 3 / span 2; }
+ .dessert { grid-column: 4 / 5; grid-row: 3; }*/
+
+  /* تحديد موضع الأقسام الرئيسية على شاشات الكمبيوتر */
+ .soup { grid-column: 1 / 2; grid-row: 2; }
+ .smokemeat { grid-column: 2 / span 2; grid-row: 2 / span 3; }
+ .burger { grid-column: 4 / 5; grid-row: 2; }
+ .salad { grid-column: 1 / 2; grid-row: 3; }
+ .appetizers { grid-column: 1 / 2; grid-row: 4; }
+ .signature { grid-column: 4 / 5; grid-row: 5; }
+ .drinks { grid-column: 4 / 5; grid-row: 3; }
+ .dessert { grid-column: 4 / 5; grid-row: 4; }
+ .Extras { grid-column: 1 / 2; grid-row: 5; }
+
+ /* Media Queries للتوافق مع شاشات الجوال */
+ @media (max-width: 768px) {
+ .menu-container {
+ grid-template-columns: 1fr;
+ padding: 15px;
+ }
+
+ .logo-section, .section, .notes-section-container {
+ grid-column: 1 / -1;
+ grid-row: auto;
+ }
+
+ .notes-section {
+ margin-top: 0;
+ }
+
+ .section-header {
+ font-size: 1.5em;
+ }
+
+ .item-name, .item-price, .item-description, .sub-section-title, .item-translation {
+ font-size: 1em;
+ }
+ .item-price-calories {
+ flex-direction: column;
+ align-items: flex-end;
+ }
+ .item-info {
+ align-items: flex-start;
+ }
+ }
+ </style>
+</head>
+<body>
+<a class="menu-btn" href="Over.html">عروضنا</a>
+ 
+ <div class="menu-container">
+ <div class="logo-section">
+ <img src="https://www.meat-zone.com/LogoMeat-Zone.png" alt="شعار ميتزون" style="max-width: 250px;">
+ <div class="section-header">قائمة الطعام<span>Menu</span></div>
+ </div>
+
+ <div class="section soup">
+ <div class="section-header">Soup<span>شوربات</span></div>
+ <p class="item-description">Served inside hard italian bread</p>
+ <p class="item-description">تقدم بخبزة الشوربة الايطالية</p>
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">شوربة فطر</span>
+ <span class="item-translation">Mushroom Soup</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">28<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">220</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">شوربة عدس</span>
+ <span class="item-translation">Lentil Soup</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">18<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">170</span>
+ </div>
+ </li>
+ </ul>
+ </div>
+
+ <div class="section signature">
+ <div class="section-header">Our Signature<span>Hot Rock</span></div>
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">واجيو</span>
+ <span class="item-translation">Wagyu</span>
+ </div>
+ <div class="item-price-calories">
+ 
+ <span class="item-calories">259</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">ستريبلوين</span>
+ <span class="item-translation">Striploin</span>
+ </div>
+ <div class="item-price-calories">
+ 
+ <span class="item-calories">150</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">توماهوك</span>
+ <span class="item-translation">Tomahawk</span>
+ </div>
+ <div class="item-price-calories">
+ 
+ <span class="item-calories">330</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">برايم أنجوس</span>
+ <span class="item-translation">Prime Angus</span>
+ </div>
+ <div class="item-price-calories">
+ 
+ <span class="item-calories">200</span>
+ </div>
+ </li>
+ </ul>
+ </div>
+
+ <div class="section burger">
+ <div class="section-header">Burger<span>برجر</span></div>
+ <div class="sub-section-title2nd">Smoke burger</div>
+ <div class="sub-section-title2nd">برجر عجل Beef Burger</div>
+ <div class="sub-section-title3th">ميتزون برجر لحم - Meat Zone Beef Burger</div>
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+
+ <span class="item-name">ساندوتش</span>
+ <span class="item-translation">Sandwich</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">29<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">520</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">وجبة</span>
+ <span class="item-translation">Combo</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">39<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">870</span>
+ </div>
+ </li>
+ </ul>
+ <div class="sub-section-title3th">توست برسكت 150غ - Brisket Toast 150g</div>
+
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+
+ <span class="item-name">ساندوتش</span>
+ <span class="item-translation">Sandwich</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">35<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">590</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">وجبة</span>
+ <span class="item-translation">Combo</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">45<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">890</span>
+ </div>
+ </li>
+ </ul>
+ <div class="sub-section-title">برجر دجاج Chicken Burger</div>
+ <div class="sub-section-title3th">ميتزون برجر دجاج - Meat Zone chicken Burger</div>
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+
+ <span class="item-name">ساندوتش</span>
+ <span class="item-translation">Sandwich</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">24<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">400</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">وجبة</span>
+ <span class="item-translation">Combo</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">34<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">750</span>
+ </div>
+ </li>
+ </ul>
+ <div class="sub-section-title3th">توست دجاج 120غ - Chicken Toast 120g</div>
+
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+
+ <span class="item-name">ساندوتش</span>
+ <span class="item-translation">Sandwich</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">20<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">600</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">وجبة</span>
+ <span class="item-translation">Combo</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">30<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">950</span>
+ </div>
+ </li>
+ </ul>
+ </div>
+  
+  
+ <div class="section drinks">
+ <div class="section-header">Drinks<span>مشروبات</span></div>
+ <div class="sub-section-title2nd">المشروبات الساخنة</div>
+  <div class="sub-section-title">Hot Drinke</div>
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">قهوة تركية</span>
+ <span class="item-translation">Turkish Coffee</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">15<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">12</span>
+ </div>
+ </li>
+ </ul>
+ <div class="sub-section-title2nd">عصائر طبيعية</div>
+ <div class="sub-section-title">Fresh Juices</div>
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">عصير برتقال</span>
+ <span class="item-translation">Orange Juice</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">17<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">151</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">عصير ليمون ونعناع</span>
+ <span class="item-translation">Lemon Mint Juice</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">17<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">512</span>
+ </div>
+ </li>
+ </ul>
+
+ <div class="sub-section-title2nd">موهيتو</div>
+  <div class="sub-section-title">Mojito</div>
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">فراولة</span>
+ <span class="item-translation">Strawberry</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">15<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">564</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">باشن فروت</span>
+ <span class="item-translation">Passion Fruit</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">15<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">564</span>
+ </div>
+ </li>
+
+  <li class="item">
+ <div class="item-info">
+ <span class="item-name">بلو بيري</span>
+ <span class="item-translation">Blue Berry</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">20<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">564</span>
+ </div>
+ </li>
+
+<li class="item">
+ <div class="item-info">
+ <span class="item-name">مكس موهيتو</span>
+ <span class="item-translation">Mix Mojito</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">20<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">564</span>
+ </div>
+ </li>
+
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">بلاك موهيتو</span>
+ <span class="item-translation">Black Mojito</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">20<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">564</span>
+ </div>
+ </li>
+  
+ </ul>
+
+  
+ </div>
+
+ <div class="section salad">
+ <div class="section-header">Salad<span>سلطات</span></div>
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">سلطة ميت زون</span>
+ <span class="item-translation">Meat Zone Salad</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">28<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">598</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">سلطة جرجير</span>
+ <span class="item-translation">Rocca Salad</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">15<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">180</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">سلطة السيزر مع دجاج</span>
+ <span class="item-translation">Chicken Caesar Salad</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">28<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">450</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">سلطة كينوا تبولة</span>
+ <span class="item-translation">Quinoa Tabbouleh Salad</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">32<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">320</span>
+ </div>
+ </li> 
+ </ul>
+ </div>
+
+ <div class="section appetizers">
+ <div class="section-header">Appetizers<span>مقبلات</span></div>
+ <div class="sub-section-title2nd">باردة</div>
+  <div class="sub-section-title">Cold</div>
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">حمص</span>
+ <span class="item-translation">Hummus</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">15<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">468</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">حمص ريحان</span>
+ <span class="item-translation">Basil Hummus</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">18<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">479</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">متبل</span>
+ <span class="item-translation">Mutbal</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">15<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">375</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">متبل شمندر</span>
+ <span class="item-translation">Beetroot Mutbal</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">18<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">425</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">بابا غنوج</span>
+ <span class="item-translation">Baba Ganouj</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">15<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">375</span>
+ </div>
+ </li>
+  
+ </ul>
+ <div class="sub-section-title2nd">ساخنة</div>
+ <div class="sub-section-title">Hot</div>
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">ميتزون فرايز (دجاج)</span>
+ <span class="item-translation">Meat Zone Fries Chicken</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">20<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">622</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">ميتوزن فرايز ( لحمة)</span>
+ <span class="item-translation">Meat Zone Fries Beef</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">25<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">720</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">اصابع الموزريلا</span>
+ <span class="item-translation">Mozzarella Sticks</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">15<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">365</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">بطاطا مقلية</span>
+ <span class="item-translation">French Fries</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">12<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">475</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">حلقات بصل</span>
+ <span class="item-translation">Onion Ring</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">12<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">420</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">ماك آند تشيز ساده</span>
+ <span class="item-translation">Mac and Cheese Plain</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">25<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">210</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">ماك آند تشيز لحمه برست</span>
+ <span class="item-translation">Mac and Cheese Brisket</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">35<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">300</span>
+ </div>
+ </li>
+ </ul>
+ </div>
+
+ <div class="section smokemeat">
+ <div class="section-header">Smoke meat<span>اللحوم المدخنة</span></div>
+ <div class="sub-section-title2nd">الخروف Lamb</span></div>
+ <div class="sub-section-title3th">143Cal/100g</span></div>
+  
+ <p class="item-description">بالتتبيله الخاصه بالخروف  With lamb's Special Marinade</p>
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">راس خروف</span>
+ <span class="item-translation">Lamb Head</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">70<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">168</span>
+ </div>
+ </li>
+ <p class="sub-section-title3th">اللحوم المدخنة تشمل الرز والسلطه وصوص ميتزون</p>
+ <p class="sub-section-title3th">Smoked Meat Includes Rice, Sala, and Meat Zone Sauce</p>
+
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">كتف خروف</span>
+ <span class="item-translation">Lamb Shoulder</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">330/1kg<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ </div>
+ </li>
+  <li class="item">
+ <div class="item-info">
+ <span class="item-name">رقبة خروف</span>
+ <span class="item-translation">Lamb Neck</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">350/1kg<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ </div>
+ </li> 
+
+  <li class="item">
+ <div class="item-info">
+ <span class="item-name">ريش خروف</span>
+ <span class="item-translation">Lamb Chops</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">330/1kg<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ </div>
+ </li> 
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">موزة خروف</span>
+ <span class="item-translation">Lamb Shank</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">330/1kg<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ </div>
+ </li> 
+
+
+<div class="sub-section-title2nd">عجل Beef</span></div>
+<div class="sub-section-title3th">168Cal/100g</span></div>
+<p class="item-description">بالتتبيله الخاصه بالعجل  With Beef Special Marinade</p>
+
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">الاضلع ( شورت ربس )</span>
+ <span class="item-translation">Ribs (Short Ribs</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">330/1kg<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ </div>
+ </li>
+
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">برسكت مع خلطة ميتزون</span>
+ <span class="item-translation">Brisket with Meat Zone Mix</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">330/1kg<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ </div>
+ </li>
+  <li class="item">
+ <div class="item-info">
+ <span class="item-name">خدود العجل</span>
+ <span class="item-translation">Beef Cheeks</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">330/1kg<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ </div>
+ </li> 
+
+ </ul>
+ <div class="sub-section-title2nd">الدجاج المدخن</div>
+ <div class="sub-section-title">Smoke Chicken</div>
+ <p class="sub-section-title3th">الدجاج المدخنة تشمل الرز والسلطه وصوص ميتزون</p>
+ <p class="sub-section-title3th">Smoked Chicken Includes Rice, Sala, and Meat Zone Sauce</p>
+
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">دجاجة مدخنة كاملة</span>
+ <span class="item-translation">Full Smoke Chicken</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">60<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">1762</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">نصف دجاجة</span>
+ <span class="item-translation">Half-full chicken</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">35<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">881</span>
+ </div>
+ </li>
+
+
+  
+ </ul>
+ </div>
+
+ <div class="section dessert">
+ <div class="section-header">Dessert<span>حلويات</span></div>
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">كنافة نابلسية</span>
+ <span class="item-translation">Nablus Kunafeh</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">19<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">489</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">أم علي</span>
+ <span class="item-translation">Um Ali</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">15<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">430</span>
+ </div>
+ </li>
+ </ul>
+ </div>
+
+ <div class="section Extras">
+ <div class="section-header">Exrtas<span>أضافات</span></div>
+ <ul class="item-list">
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">ميتزون صوص</span>
+ <span class="item-translation">Meat Zone Sauce</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">3<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">105</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">صوص الذره</span>
+ <span class="item-translation">CoenSaus</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">3<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">97</span>
+ </div>
+ </li>
+
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">سبيشال صوص</span>
+ <span class="item-translation">Special Sauce</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">3<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">95</span>
+ </div>
+ </li>
+  <li class="item">
+ <div class="item-info">
+ <span class="item-name">تشيزي صوص</span>
+ <span class="item-translation">Cheesy Sauce</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">3<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">123</span>
+ </div>
+ </li>
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">صوص الخردل مع العسل</span>
+ <span class="item-translation">Honey Mustard Sauce</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">4<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">110</span>
+ </div>
+ </li>
+
+  <li class="item">
+ <div class="item-info">
+ <span class="item-name">طحينيه</span>
+ <span class="item-translation">Taheni</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">2<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">89</span>
+ </div>
+ </li>
+
+  <li class="item">
+ <div class="item-info">
+ <span class="item-name">طحينية حارة</span>
+ <span class="item-translation">Hot Taheni</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">3<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">94</span>
+ </div>
+ </li>
+
+  <li class="item">
+ <div class="item-info">
+ <span class="item-name">رز ميتزون المدخن</span>
+ <span class="item-translation">Meat Zone Smoke Rice</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">8<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">84</span>
+ </div>
+ </li>
+  
+ <li class="item">
+ <div class="item-info">
+ <span class="item-name">رز ميتزون</span>
+ <span class="item-translation">Meat Zone Rice</span>
+ </div>
+ <div class="item-price-calories">
+ <span class="item-price">8<img src="https://www.meat-zone.com/SAR.png" alt="ريال" class="sar-icon"></span>
+ <span class="item-calories">84</span>
+ </div>
+ </li>
+  
+ </ul>
+ </div>
+
+  
+
+ <div class="notes-section-container">
+ <div class="notes-section">
+ <h3>احتياجات الشخص من السعرات الحرارية</h3>
+ <p><strong>الرجل:</strong> 2000 - 3000 سعرة حرارية</p>
+ <p><strong>المرأة:</strong> 1600 - 2400 سعرة حرارية</p>
+ <p><strong>الأطفال:</strong> 1800 سعرة حرارية</p>
+ </div>
+ </div>
+
+ </div>
+
+</body>
+</html>
