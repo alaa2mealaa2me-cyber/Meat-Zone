@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة المخزون الديناميكي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Language Toggle Button */
+        .language-toggle {
+            position: relative;
+            display: inline-block;
+            width: 90px;
+            height: 34px;
+        }
+        .language-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #4f46e5;
+        }
+        input:focus + .slider {
+            box-shadow: 0 0 1px #4f46e5;
+        }
+        input:checked + .slider:before {
+            transform: translateX(56px);
+        }
+        .lang-text {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            transition: opacity 0.4s;
+            pointer-events: none;
+        }
+        .lang-text.ar {
+            left: 8px;
+            opacity: 0;
+        }
+        .lang-text.en {
+            right: 8px;
+            opacity: 1;
+        }
+        input:checked ~ .lang-text.ar {
+            opacity: 1;
+        }
+        input:checked ~ .lang-text.en {
+            opacity: 0;
+        }
+
+        /* Modal specific styles */
+        .modal {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+            animation: fadeInScale 0.3s ease-in-out;
+        }
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        /* Specific styling for the file upload button */
+        .upload-button-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .upload-button-wrapper input[type=file] {
+            position: absolute;
+            top: 0;
+            right: 0;
+            min-width: 100%;
+            min-height: 100%;
+            font-size: 100px;
+            text-align: right;
+            filter: alpha(opacity=0);
+            opacity: 0;
+            outline: none;
+            cursor: pointer;
+            display: block;
+        }
+        
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center p-4 min-h-screen">
+    <script>
+        let inventoryContainer, addPartForm, partList, toggleViewBtn, statusMessage, searchInput, clearSearchBtn, partDetailsModal, partDetailsContent, closeModalBtn, newEmployeeFields, employeeNameInput, exportExcelBtn, loadExcelBtn, exportFilteredExcelBtn, backBtn, itemCountDisplay, partDetailsView, editPartForm, deletePartBtn, saveEditBtn, backToListViewBtn, editEmployeeFields, confirmDeleteModal, cancelDeleteModal, partToDeleteId, cancelEditBtn, exportConfirmModal, exportConfirmMessage, sheetSelect, sheetSelectionContainer, languageToggle;
+
+        let partsData = {};
+        let nextPartId = 1;
+        let currentFilteredParts = [];
+        let currentSearchQuery = '';
+        let dynamicHeaders = [];
+        let headerMap = {};
+        let allWorksheets = {};
+        let currentSheetName = '';
+        let currentLang = 'ar';
+
+        const translations = {
+            ar: {
+                title: 'نظام إدارة المخزون الديناميكي',
+                header: 'نظام إدارة المخزون الديناميكي',
+                addButton: 'إضافة قطعة جديدة',
+                backButton: 'العودة إلى القائمة',
+                loadExcelButton: 'تحميل من إكسل',
+                exportAllButton: 'تصدير الكل إلى إكسل',
+                exportFilteredButton: 'تصدير نتائج البحث',
+                sheetSelectLabel: 'اختر الورقة:',
+                inventoryHeader: 'قائمة المخزون',
+                itemCountTotal: 'إجمالي عدد القطع: ',
+                itemCountFiltered: 'نتائج البحث: ',
+                from: 'من أصل',
+                searchPlaceholder: 'ابحث عن قطعة...',
+                noParts: 'لا توجد قطع في المخزون حتى الآن.',
+                noSearchResults: 'لا توجد نتائج بحث مطابقة.',
+                addPartHeader: 'إضافة قطعة جديدة',
+                saveButton: 'حفظ',
+                saving: '...جاري الحفظ',
+                partDetailsHeader: 'تفاصيل القطعة',
+                editButton: 'تعديل القطعة',
+                deleteButton: 'حذف القطعة',
+                editPartHeader: 'تعديل بيانات القطعة',
+                saveChangesButton: 'حفظ التعديلات',
+                cancelEditButton: 'إلغاء التعديل',
+                deleteModalHeader: 'تأكيد الحذف',
+                deleteModalMessage: 'هل أنت متأكد من أنك تريد حذف هذه القطعة؟ لا يمكن التراجع عن هذا الإجراء.',
+                confirmDeleteButton: 'نعم، احذف',
+                cancelDeleteButton: 'إلغاء',
+                exportConfirmHeader: 'تأكيد التصدير',
+                exportConfirmAllMessage: 'سيتم تصدير جميع أوراق العمل إلى ملف جديد باسم',
+                exportConfirmFilteredMessage: 'سيتم تصدير نتائج البحث إلى ملف جديد باسم',
+                okButton: 'موافق',
+                cancelButton: 'إلغاء',
+                successSave: 'تم حفظ البيانات بنجاح!',
+                successUpdate: 'تم تعديل البيانات بنجاح!',
+                successDelete: 'تم حذف القطعة بنجاح!',
+                successLoad: 'تم تحميل البيانات من ملف إكسل بنجاح!',
+                successExport: 'تم تصدير البيانات بنجاح!',
+                errorReadingFile: 'حدث خطأ أثناء قراءة ملف إكسل. يرجى التأكد من أن الملف صحيح.',
+                noSheets: 'لا توجد أوراق في ملف الإكسل.',
+                noDataInSheet: 'لا توجد بيانات في ورقة',
+                unknown: 'غير محدد'
+            },
+            en: {
+                title: 'Dynamic Inventory Management System',
+                header: 'Dynamic Inventory Management System',
+                addButton: 'Add New Part',
+                backButton: 'Back to List',
+                loadExcelButton: 'Load from Excel',
+                exportAllButton: 'Export All to Excel',
+                exportFilteredButton: 'Export Filtered Data',
+                sheetSelectLabel: 'Select Sheet:',
+                inventoryHeader: 'Inventory List',
+                itemCountTotal: 'Total Items: ',
+                itemCountFiltered: 'Search Results: ',
+                from: 'out of',
+                searchPlaceholder: 'Search for a part...',
+                noParts: 'No parts in inventory yet.',
+                noSearchResults: 'No matching search results.',
+                addPartHeader: 'Add New Part',
+                saveButton: 'Save',
+                saving: 'Saving...',
+                partDetailsHeader: 'Part Details',
+                editButton: 'Edit Part',
+                deleteButton: 'Delete Part',
+                editPartHeader: 'Edit Part Data',
+                saveChangesButton: 'Save Changes',
+                cancelEditButton: 'Cancel Edit',
+                deleteModalHeader: 'Confirm Deletion',
+                deleteModalMessage: 'Are you sure you want to delete this part? This action cannot be undone.',
+                confirmDeleteButton: 'Yes, Delete',
+                cancelDeleteButton: 'Cancel',
+                exportConfirmHeader: 'Confirm Export',
+                exportConfirmAllMessage: 'All worksheets will be exported to a new file named',
+                exportConfirmFilteredMessage: 'Search results will be exported to a new file named',
+                okButton: 'Confirm',
+                cancelButton: 'Cancel',
+                successSave: 'Data saved successfully!',
+                successUpdate: 'Data updated successfully!',
+                successDelete: 'Part deleted successfully!',
+                successLoad: 'Data loaded from Excel file successfully!',
+                successExport: 'Data exported successfully!',
+                errorReadingFile: 'An error occurred while reading the Excel file. Please ensure the file is correct.',
+                noSheets: 'No sheets found in the Excel file.',
+                noDataInSheet: 'No data in sheet',
+                unknown: 'N/A'
+            }
+        };
+
+        const t = (key) => {
+            const translation = translations[currentLang][key];
+            if (!translation) {
+                console.warn(`Missing translation for key: ${key}`);
+                return key;
+            }
+            return translation;
+        };
+
+        const updateUI = () => {
+            const isRTL = currentLang === 'ar';
+            document.documentElement.lang = currentLang;
+            document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+            document.body.style.direction = isRTL ? 'rtl' : 'ltr';
+
+            // Update text content
+            document.querySelector('title').textContent = t('title');
+            document.querySelector('h1').textContent = t('header');
+            toggleViewBtn.textContent = t(viewState === 'addPart' ? 'backButton' : 'addButton');
+            backToListViewBtn.textContent = t('backButton');
+            document.getElementById('load-excel-btn-label').textContent = t('loadExcelButton');
+            exportExcelBtn.textContent = t('exportAllButton');
+            exportFilteredExcelBtn.textContent = t('exportFilteredButton');
+            document.getElementById('sheet-select-label').textContent = t('sheetSelectLabel');
+            document.querySelector('#inventory-container h2').textContent = t('inventoryHeader');
+            searchInput.placeholder = t('searchPlaceholder');
+            document.querySelector('#add-part-form h2').textContent = t('addPartHeader');
+            document.querySelector('#add-part-form button[type="submit"]').textContent = t('saveButton');
+            document.querySelector('#part-details-view h2').textContent = t('partDetailsHeader');
+            document.getElementById('edit-mode-btn').textContent = t('editButton');
+            document.getElementById('delete-part-btn').textContent = t('deleteButton');
+            document.querySelector('#edit-part-form h3').textContent = t('editPartHeader');
+            saveEditBtn.textContent = t('saveChangesButton');
+            cancelEditBtn.textContent = t('cancelEditButton');
+            document.querySelector('#delete-modal h3').textContent = t('deleteModalHeader');
+            document.querySelector('#delete-modal p').textContent = t('deleteModalMessage');
+            document.getElementById('confirm-delete-btn').textContent = t('confirmDeleteButton');
+            document.getElementById('cancel-delete-btn').textContent = t('cancelDeleteButton');
+            document.querySelector('#export-confirm-modal h3').textContent = t('exportConfirmHeader');
+            document.getElementById('confirm-export-btn').textContent = t('okButton');
+            document.getElementById('cancel-export-btn').textContent = t('cancelButton');
+            
+            // Adjust form field labels dynamically based on new headers
+            const formFieldsContainer = document.getElementById('add-part-fields-container');
+            if (formFieldsContainer) {
+                const labels = formFieldsContainer.querySelectorAll('label');
+                labels.forEach(label => {
+                    const originalText = label.getAttribute('data-original-text');
+                    if (originalText) {
+                         label.textContent = originalText;
+                    }
+                });
+            }
+
+            renderPartList(currentSearchQuery);
+            if (viewState === 'addPart') {
+                renderFormFields('add-part-fields-container', dynamicHeaders);
+            } else if (viewState === 'partDetails') {
+                const partId = partDetailsView.querySelector('#edit-part-form').getAttribute('data-part-id');
+                loadPartDetails(partId);
+            }
+
+            document.querySelectorAll('[data-label]').forEach(el => {
+                const key = el.getAttribute('data-label');
+                el.textContent = t(key);
+            });
+            document.querySelectorAll('input').forEach(input => {
+                if (input.placeholder) {
+                    const key = `placeholder_${input.id}`;
+                    input.placeholder = t(key) || input.placeholder;
+                }
+            });
+        };
+
+        const switchLanguage = () => {
+            currentLang = languageToggle.checked ? 'en' : 'ar';
+            updateUI();
+        };
+
+        const showMessage = (message, type = 'success') => {
+            if (!statusMessage) return;
+            statusMessage.textContent = message;
+            statusMessage.classList.remove('hidden', 'bg-green-500', 'bg-red-500', 'bg-gray-500');
+            if (type === 'success') {
+                statusMessage.classList.add('bg-green-500');
+            } else if (type === 'error') {
+                statusMessage.classList.add('bg-red-500');
+            } else if (type === 'info') {
+                statusMessage.classList.add('bg-gray-500');
+            }
+            setTimeout(() => {
+                statusMessage.classList.add('hidden');
+            }, 3000);
+        };
+
+        let viewState = 'inventory';
+
+        const showView = (view, partId = null) => {
+            viewState = view;
+            render(partId);
+        };
+
+        const render = (partId = null) => {
+            if (!inventoryContainer || !addPartForm || !partDetailsView) {
+                console.error("DOM elements are missing.");
+                return;
+            }
+
+            inventoryContainer.classList.add('hidden');
+            addPartForm.classList.add('hidden');
+            partDetailsView.classList.add('hidden');
+            backToListViewBtn.classList.add('hidden');
+            toggleViewBtn.textContent = t('addButton');
+
+            if (viewState === 'inventory') {
+                inventoryContainer.classList.remove('hidden');
+                toggleViewBtn.textContent = t('addButton');
+                toggleViewBtn.onclick = () => showView('addPart');
+                searchInput.value = '';
+                renderPartList();
+            } else if (viewState === 'addPart') {
+                inventoryContainer.classList.add('hidden');
+                addPartForm.classList.remove('hidden');
+                toggleViewBtn.textContent = t('backButton');
+                toggleViewBtn.onclick = () => showView('inventory');
+                renderFormFields('add-part-fields-container', dynamicHeaders);
+                addPartForm.reset();
+                backToListViewBtn.classList.remove('hidden');
+            } else if (viewState === 'partDetails') {
+                partDetailsView.classList.remove('hidden');
+                backToListViewBtn.classList.remove('hidden');
+                loadPartDetails(partId);
+            }
+        };
+
+        const renderPartList = (filterText = '') => {
+            if (!partList) return;
+            partList.innerHTML = '';
+            currentSearchQuery = filterText;
+            let partsArray = Object.values(partsData);
+            clearSearchBtn.classList.toggle('hidden', !filterText);
+
+            if (filterText) {
+                const lowerCaseFilter = filterText.toLowerCase().trim();
+                partsArray = partsArray.filter(part => {
+                    let searchableString = Object.values(part).filter(val => typeof val === 'string').join(' ');
+                    return searchableString.toLowerCase().includes(lowerCaseFilter);
+                });
+            }
+
+            currentFilteredParts = partsArray;
+
+            if (itemCountDisplay) {
+                if (filterText) {
+                    itemCountDisplay.textContent = `${t('itemCountFiltered')} ${partsArray.length} ${t('from')} ${Object.keys(partsData).length} ${currentLang === 'ar' ? 'قطعة' : 'items'}`;
+                } else {
+                    itemCountDisplay.textContent = `${t('itemCountTotal')} ${partsArray.length}`;
+                }
+            }
+            exportFilteredExcelBtn.classList.toggle('hidden', !filterText);
+
+            if (partsArray.length === 0) {
+                partList.innerHTML = `<p class="text-gray-500 text-center">${filterText ? t('noSearchResults') : t('noParts')}</p>`;
+                return;
+            }
+
+            partsArray.forEach(part => {
+                const li = document.createElement('li');
+                li.className = 'bg-white p-4 rounded-xl shadow-md flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0 cursor-pointer hover:bg-gray-50 transition duration-300';
+                li.setAttribute('data-part-id', part.id);
+
+                let partInfo = dynamicHeaders.filter(h => h !== 'id').map(header => {
+                    const value = part[header] || t('unknown');
+                    return `<p class="text-sm text-gray-600"><strong>${header}:</strong> ${value}</p>`;
+                }).join('');
+
+                li.innerHTML = `
+                    <div class="flex-1">
+                        ${partInfo}
+                    </div>
+                `;
+                partList.appendChild(li);
+            });
+
+            document.querySelectorAll('#part-list > li').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const partId = e.currentTarget.dataset.partId;
+                    showView('partDetails', partId);
+                });
+            });
+        };
+
+        const renderFormFields = (containerId, headers, data = {}) => {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            headers.forEach(header => {
+                if (header === 'id') return;
+                const fieldName = headerMap[header]; // Use the safe field name from the map
+                const value = data[header] || '';
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <label for="${fieldName}" class="block text-sm font-medium text-gray-700" data-original-text="${header}">${header}:</label>
+                    <input type="text" id="${fieldName}" name="${fieldName}" value="${value}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                `;
+                container.appendChild(div);
+            });
+        };
+
+        const handleFormSubmit = (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = t('saving');
+
+            let newPartId = `part-${nextPartId++}`;
+            let partData = { id: newPartId };
+
+            const formData = new FormData(form);
+            dynamicHeaders.forEach(header => {
+                if (header === 'id') return;
+                const fieldName = headerMap[header]; // Use the safe field name from the map
+                partData[header] = formData.get(fieldName) || '';
+            });
+
+            partsData[newPartId] = partData;
+            allWorksheets[currentSheetName] = [dynamicHeaders, ...Object.values(partsData)];
+
+            showMessage(t('successSave'));
+            form.reset();
+            showView('inventory');
+            submitButton.disabled = false;
+            submitButton.textContent = t('saveButton');
+        };
+
+        const loadPartDetails = (partId) => {
+            const part = partsData[partId];
+            if (!part || !partDetailsView) {
+                showView('inventory');
+                return;
+            }
+
+            let detailsHtml = dynamicHeaders.filter(h => h !== 'id').map(header => `
+                <p><strong>${header}:</strong> ${part[header] || t('unknown')}</p>
+            `).join('');
+
+            partDetailsView.querySelector('#part-details-display').innerHTML = `
+                <h3 class="text-2xl font-bold mb-4">${t('partDetailsHeader')}</h3>
+                <div class="space-y-2 text-lg">
+                    ${detailsHtml}
+                </div>
+            `;
+
+            const form = partDetailsView.querySelector('#edit-part-form');
+            form.setAttribute('data-part-id', partId);
+            renderFormFields('edit-part-fields-container', dynamicHeaders, part);
+
+            partDetailsView.querySelector('#part-details-display').classList.remove('hidden');
+            partDetailsView.querySelector('#edit-part-form').classList.add('hidden');
+            partDetailsView.querySelector('#delete-part-btn').classList.remove('hidden');
+            partDetailsView.querySelector('#edit-mode-btn').classList.remove('hidden');
+            partDetailsView.querySelector('#save-edit-btn').classList.add('hidden');
+            partDetailsView.querySelector('#cancel-edit-btn').classList.add('hidden');
+        };
+
+        const handleEditMode = () => {
+            partDetailsView.querySelector('#part-details-display').classList.add('hidden');
+            partDetailsView.querySelector('#edit-part-form').classList.remove('hidden');
+            partDetailsView.querySelector('#delete-part-btn').classList.add('hidden');
+            partDetailsView.querySelector('#edit-mode-btn').classList.add('hidden');
+            partDetailsView.querySelector('#save-edit-btn').classList.remove('hidden');
+            partDetailsView.querySelector('#cancel-edit-btn').classList.remove('hidden');
+        };
+
+        const handleCancelEdit = () => {
+            partDetailsView.querySelector('#part-details-display').classList.remove('hidden');
+            partDetailsView.querySelector('#edit-part-form').classList.add('hidden');
+            partDetailsView.querySelector('#delete-part-btn').classList.remove('hidden');
+            partDetailsView.querySelector('#edit-mode-btn').classList.remove('hidden');
+            partDetailsView.querySelector('#save-edit-btn').classList.add('hidden');
+            partDetailsView.querySelector('#cancel-edit-btn').classList.add('hidden');
+        };
+
+        const handleSaveEdit = (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const partId = form.getAttribute('data-part-id');
+            const part = partsData[partId];
+            if (!part) return;
+
+            const formData = new FormData(form);
+            dynamicHeaders.forEach(header => {
+                if (header === 'id') return;
+                const fieldName = headerMap[header];
+                part[header] = formData.get(fieldName) || '';
+            });
+            
+            allWorksheets[currentSheetName] = [dynamicHeaders, ...Object.values(partsData)];
+            showMessage(t('successUpdate'));
+            showView('inventory');
+        };
+
+        const handleShowDeleteModal = () => {
+            const partId = partDetailsView.querySelector('#edit-part-form').getAttribute('data-part-id');
+            partToDeleteId.value = partId;
+            confirmDeleteModal.classList.remove('hidden');
+        };
+        
+        const handleConfirmDelete = () => {
+            const partId = partToDeleteId.value;
+            if (partId && partsData[partId]) {
+                delete partsData[partId];
+                allWorksheets[currentSheetName] = [dynamicHeaders, ...Object.values(partsData)];
+                showMessage(t('successDelete'));
+            }
+            confirmDeleteModal.classList.add('hidden');
+            showView('inventory');
+        };
+
+        const handleCancelDelete = () => {
+            confirmDeleteModal.classList.add('hidden');
+            partToDeleteId.value = '';
+        };
+
+        const displaySheet = (sheetName) => {
+            const jsonData = allWorksheets[sheetName];
+            if (!jsonData || jsonData.length === 0) {
+                showMessage(`${t('noDataInSheet')} "${sheetName}".`, 'info');
+                dynamicHeaders = [];
+                partsData = {};
+                render();
+                return;
+            }
+
+            currentSheetName = sheetName;
+            dynamicHeaders = jsonData[0];
+            headerMap = {};
+            dynamicHeaders.forEach((header, index) => {
+                headerMap[header] = `field_${index}`;
+            });
+
+            partsData = {};
+            nextPartId = 1;
+            for (let i = 1; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                if (row.length === 0) continue;
+                const partId = `part-${nextPartId++}`;
+                const partData = { id: partId };
+                dynamicHeaders.forEach((header, index) => {
+                    partData[header] = (row[index] || '').toString().trim();
+                });
+                partsData[partId] = partData;
+            }
+            showMessage(`${t('successLoad')}`);
+            render();
+        };
+
+        const loadFromExcel = (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    allWorksheets = {};
+                    const sheetNames = workbook.SheetNames;
+                    
+                    if (sheetNames.length === 0) {
+                        showMessage(t('noSheets'), 'error');
+                        return;
+                    }
+                    
+                    sheetSelect.innerHTML = '';
+                    sheetNames.forEach(name => {
+                        const option = document.createElement('option');
+                        option.value = name;
+                        option.textContent = name;
+                        sheetSelect.appendChild(option);
+                        
+                        const worksheet = workbook.Sheets[name];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        allWorksheets[name] = jsonData;
+                    });
+                    
+                    sheetSelectionContainer.classList.remove('hidden');
+                    displaySheet(sheetNames[0]);
+                    
+                } catch (error) {
+                    console.error("Error reading Excel file:", error);
+                    showMessage(t('errorReadingFile'), 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        };
+        
+        const exportToExcel = (dataToExport, baseFilename, isFiltered = false) => {
+            const workbook = XLSX.utils.book_new();
+
+            if (isFiltered) {
+                const worksheet = XLSX.utils.aoa_to_sheet([dynamicHeaders, ...dataToExport.map(part => dynamicHeaders.map(header => part[header] || ''))]);
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered_Data");
+            } else {
+                for (const sheetName in allWorksheets) {
+                    if (allWorksheets.hasOwnProperty(sheetName)) {
+                        const jsonData = allWorksheets[sheetName];
+                        if (jsonData && jsonData.length > 0) {
+                            const worksheet = XLSX.utils.aoa_to_sheet(jsonData);
+                            XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+                        }
+                    }
+                }
+            }
+            
+            const now = new Date();
+            const dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+            const timeStr = String(now.getHours()).padStart(2, '0') + '-' + String(now.getMinutes()).padStart(2, '0') + '-' + String(now.getSeconds()).padStart(2, '0');
+            const sanitizedFilename = baseFilename.replace(/[/\\?%*:|"<>]/g, '_');
+            const filename = `${sanitizedFilename}_${dateStr}_${timeStr}.xlsx`;
+
+            XLSX.writeFile(workbook, filename);
+            
+            showMessage(t('successExport'));
+        };
+        
+        const showExportConfirmModal = (dataToExport, baseFilename, isFiltered) => {
+            if (exportConfirmModal && exportConfirmMessage) {
+                if (isFiltered) {
+                    exportConfirmMessage.textContent = `${t('exportConfirmFilteredMessage')} "${baseFilename}_[${currentLang === 'ar' ? 'التاريخ' : 'Date'}]_[${currentLang === 'ar' ? 'الوقت' : 'Time'}].xlsx".`;
+                } else {
+                    exportConfirmMessage.textContent = `${t('exportConfirmAllMessage')} "${baseFilename}_[${currentLang === 'ar' ? 'التاريخ' : 'Date'}]_[${currentLang === 'ar' ? 'الوقت' : 'Time'}].xlsx".`;
+                }
+                
+                exportConfirmModal.classList.remove('hidden');
+                document.getElementById('confirm-export-btn').onclick = () => {
+                    exportToExcel(dataToExport, baseFilename, isFiltered);
+                    exportConfirmModal.classList.add('hidden');
+                };
+                document.getElementById('cancel-export-btn').onclick = () => {
+                    exportConfirmModal.classList.add('hidden');
+                };
+            }
+        };
+
+        const init = () => {
+            inventoryContainer = document.getElementById('inventory-container');
+            addPartForm = document.getElementById('add-part-form');
+            partList = document.getElementById('part-list');
+            toggleViewBtn = document.getElementById('toggle-view-btn');
+            statusMessage = document.getElementById('status-message');
+            searchInput = document.getElementById('search-input');
+            clearSearchBtn = document.getElementById('clear-search-btn');
+            exportExcelBtn = document.getElementById('export-excel-btn');
+            loadExcelBtn = document.getElementById('load-excel-btn');
+            exportFilteredExcelBtn = document.getElementById('export-filtered-excel-btn');
+            itemCountDisplay = document.getElementById('item-count');
+            partDetailsView = document.getElementById('part-details-view');
+            editPartForm = document.getElementById('edit-part-form');
+            deletePartBtn = document.getElementById('delete-part-btn');
+            saveEditBtn = document.getElementById('save-edit-btn');
+            backToListViewBtn = document.getElementById('back-to-list-view-btn');
+            confirmDeleteModal = document.getElementById('delete-modal');
+            partToDeleteId = document.getElementById('part-to-delete-id');
+            cancelEditBtn = document.getElementById('cancel-edit-btn');
+            exportConfirmModal = document.getElementById('export-confirm-modal');
+            exportConfirmMessage = document.getElementById('export-confirm-message');
+            sheetSelect = document.getElementById('sheet-select');
+            sheetSelectionContainer = document.getElementById('sheet-selection-container');
+            languageToggle = document.getElementById('language-toggle');
+            
+            if (addPartForm) addPartForm.addEventListener('submit', handleFormSubmit);
+            if (editPartForm) editPartForm.addEventListener('submit', handleSaveEdit);
+            if (toggleViewBtn) toggleViewBtn.onclick = () => showView('addPart');
+            if (searchInput) searchInput.addEventListener('keyup', (e) => renderPartList(e.target.value));
+            if (clearSearchBtn) clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                renderPartList();
+            });
+            if (exportExcelBtn) exportExcelBtn.addEventListener('click', () => showExportConfirmModal(allWorksheets, 'Inventory', false));
+            if (exportFilteredExcelBtn) exportFilteredExcelBtn.addEventListener('click', () => showExportConfirmModal(currentFilteredParts, currentSearchQuery, true));
+            if (loadExcelBtn) loadExcelBtn.addEventListener('change', loadFromExcel);
+            if (deletePartBtn) deletePartBtn.addEventListener('click', handleShowDeleteModal);
+            if (backToListViewBtn) backToListViewBtn.addEventListener('click', () => showView('inventory'));
+            if (document.getElementById('edit-mode-btn')) document.getElementById('edit-mode-btn').addEventListener('click', handleEditMode);
+            if (cancelEditBtn) cancelEditBtn.addEventListener('click', handleCancelEdit);
+            if (document.getElementById('confirm-delete-btn')) document.getElementById('confirm-delete-btn').addEventListener('click', handleConfirmDelete);
+            if (document.getElementById('cancel-delete-btn')) document.getElementById('cancel-delete-btn').addEventListener('click', handleCancelDelete);
+            if (sheetSelect) sheetSelect.addEventListener('change', (e) => displaySheet(e.target.value));
+            if (languageToggle) languageToggle.addEventListener('change', switchLanguage);
+            
+            dynamicHeaders = ['نوع القطعة', 'الشركة المصنعة', 'الموديل', 'الرقم التسلسلي', 'الماك أدرس'];
+            dynamicHeaders.forEach((header, index) => {
+                headerMap[header] = `field_${index}`;
+            });
+            
+            allWorksheets['الافتراضي'] = [dynamicHeaders];
+            currentSheetName = 'الافتراضي';
+            
+            updateUI();
+        };
+
+        window.onload = init;
+    </script>
+    <div class="max-w-4xl w-full bg-white rounded-2xl shadow-xl p-6 md:p-10 text-start">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-6 border-b pb-4">
+            <div class="flex flex-col">
+                <h1 class="text-3xl font-bold text-gray-800">نظام إدارة المخزون الديناميكي</h1>
+            </div>
+            <label class="language-toggle my-4 md:my-0">
+                <input type="checkbox" id="language-toggle">
+                <span class="slider"></span>
+                <span class="lang-text ar">AR</span>
+                <span class="lang-text en">EN</span>
+            </label>
+        </header>
+        
+        <div id="status-message" class="hidden text-center text-white font-bold py-3 px-6 rounded-xl mb-4 transition-all duration-300"></div>
+        
+        <div class="mb-6 flex flex-wrap justify-between items-center gap-2">
+            <button id="toggle-view-btn" class="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md"></button>
+            <button id="back-to-list-view-btn" class="hidden cursor-pointer bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md"></button>
+            <div class="flex flex-wrap gap-2">
+                 <div class="upload-button-wrapper">
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md" id="load-excel-btn-label"></button>
+                    <input type="file" id="load-excel-btn" accept=".xlsx, .xls">
+                </div>
+                <button id="export-excel-btn" class="cursor-pointer bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md"></button>
+                <button id="export-filtered-excel-btn" class="hidden cursor-pointer bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md"></button>
+            </div>
+        </div>
+
+        <div id="sheet-selection-container" class="hidden w-full flex items-center gap-2 mb-4">
+            <label for="sheet-select" id="sheet-select-label" class="text-sm font-medium text-gray-700">اختر الورقة:</label>
+            <select id="sheet-select" class="flex-1 block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"></select>
+        </div>
+        
+        <div id="main-content">
+            <!-- Inventory View -->
+            <div id="inventory-container" class="space-y-4">
+                <h2 class="text-2xl font-bold text-gray-700"></h2>
+                <p id="item-count" class="text-sm text-gray-500 text-start"></p>
+                <div class="relative">
+                    <input type="text" id="search-input" placeholder="ابحث عن قطعة..." class="w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <button id="clear-search-btn" class="absolute inset-y-0 start-0 flex items-center pr-3 hidden cursor-pointer">
+                        <svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <ul id="part-list" class="space-y-4">
+                    <!-- Parts will be rendered here by JavaScript -->
+                </ul>
+            </div>
+            
+            <!-- Add New Part Form -->
+            <form id="add-part-form" class="hidden space-y-4 bg-gray-50 p-6 rounded-2xl shadow-inner">
+                <h2 class="text-2xl font-bold text-gray-700"></h2>
+                
+                <div id="add-part-fields-container" class="space-y-4">
+                    <!-- Dynamic form fields will be generated here -->
+                </div>
+
+                <div class="flex justify-between items-center mt-4">
+                    <button type="submit" class="cursor-pointer flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"></button>
+                </div>
+            </form>
+
+            <!-- Part Details and Edit View -->
+            <div id="part-details-view" class="hidden space-y-4 bg-gray-50 p-6 rounded-2xl shadow-inner">
+                <h2 class="text-2xl font-bold text-gray-700"></h2>
+                <div id="part-details-display" class="space-y-4">
+                    <!-- Details will be loaded here -->
+                </div>
+                <div class="flex justify-between items-center">
+                    <button id="edit-mode-btn" class="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md"></button>
+                    <button id="delete-part-btn" class="cursor-pointer bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md"></button>
+                </div>
+
+                <!-- Edit Part Form -->
+                <form id="edit-part-form" class="hidden space-y-4 bg-gray-100 p-6 rounded-xl shadow-inner" data-part-id="">
+                    <h3 class="text-xl font-bold text-gray-700"></h3>
+                    <div id="edit-part-fields-container" class="space-y-4">
+                        <!-- Dynamic form fields will be generated here -->
+                    </div>
+                    <div class="flex justify-between items-center mt-4 space-x-2 space-x-reverse">
+                        <button type="submit" id="save-edit-btn" class="cursor-pointer flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"></button>
+                        <button type="button" id="cancel-edit-btn" class="cursor-pointer flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-600 bg-opacity-50 flex justify-center items-center modal">
+        <div class="relative bg-white rounded-lg shadow-xl p-8 max-w-sm w-full text-center modal-content">
+            <input type="hidden" id="part-to-delete-id">
+            <h3 class="text-xl font-bold text-gray-900 mb-4"></h3>
+            <p class="text-sm text-gray-600 mb-6"></p>
+            <div class="flex justify-center space-x-4 space-x-reverse">
+                <button id="confirm-delete-btn" class="cursor-pointer bg-red-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-red-700 transition-colors duration-300"></button>
+                <button id="cancel-delete-btn" class="cursor-pointer bg-gray-400 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-gray-500 transition-colors duration-300"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Confirmation Modal -->
+    <div id="export-confirm-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-600 bg-opacity-50 flex justify-center items-center modal">
+        <div class="relative bg-white rounded-lg shadow-xl p-8 max-w-sm w-full text-center modal-content">
+            <h3 class="text-xl font-bold text-gray-900 mb-4"></h3>
+            <p id="export-confirm-message" class="text-sm text-gray-600 mb-6"></p>
+            <div class="flex justify-center space-x-4 space-x-reverse">
+                <button id="confirm-export-btn" class="cursor-pointer bg-green-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-green-700 transition-colors duration-300"></button>
+                <button id="cancel-export-btn" class="cursor-pointer bg-gray-400 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:bg-gray-500 transition-colors duration-300"></button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
