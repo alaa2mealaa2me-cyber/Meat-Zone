@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نموذج طلب خدمة تقنية</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -46,6 +47,14 @@
         input[type="email"],
         textarea,
         select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        input[type="datetime-local"] {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
@@ -97,16 +106,16 @@
 <body>
 
 <div class="form-container">
-    <h2>نموذج طلب خدمة تقنية</h2>
-    <form id="contactForm" action="https://www.meat-zone.com/UniDents/process.php" method="POST">
+    <h2>طلب صيانة</h2>
+    <form id="contactForm" action="process.php" method="POST">
         <div class="form-group">
-            <label for="name">الاسم الكامل:</label>
-            <input type="text" id="name" name="name" required>
+            <label for="clinic_number"> رقم او موقع الخدمة</label>
+            <input type="text" id="clinic_number" name="clinic_number" required>
         </div>
 
         <div class="form-group">
-            <label for="email">البريد الإلكتروني:</label>
-            <input type="email" id="email" name="email" required>
+            <label for="datetime">التاريخ والوقت:</label>
+            <input type="datetime-local" id="datetime" name="datetime" required>
         </div>
 
         <div class="form-group">
@@ -120,8 +129,10 @@
                 <option value="">-- اختر خدمة --</option>
                 <option value="صيانة أجهزة">صيانة أجهزة</option>
                 <option value="برمجة وتطوير">برمجة وتطوير</option>
-                <option value="دعم شبكات">دعم فني للشبكات</option>
-                <option value="تركيب برامج">تركيب وتثبيت برامج</option>
+                <option value="دعم شبكات">دعم فني للشبكات والهاتف</option>
+                <option value="تركيب برامج">تثبيت برامج</option>
+				<option value="تركيب برامج">كهرباء</option>
+				<option value="تركيب برامج">سباكة</option>
                 <option value="أخرى">أخرى</option>
             </select>
         </div>
@@ -137,6 +148,13 @@
 </div>
 
 <script>
+    // هذا الكود يقوم بتعبئة حقل التاريخ والوقت تلقائيًا
+    window.addEventListener('load', function() {
+        var now = new Date();
+        var localDatetime = now.toISOString().slice(0,16);
+        document.getElementById('datetime').value = localDatetime;
+    });
+    
     document.getElementById('contactForm').addEventListener('submit', function(event) {
         event.preventDefault();
 
@@ -169,5 +187,4 @@
 </script>
 
 </body>
-
 </html>
