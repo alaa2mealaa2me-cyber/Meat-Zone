@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>دفع PayPal مع تحويل العملة</title>
+  <script src="https://www.paypal.com/sdk/js?client-id=AaW31sVjcKGTe-cWnwHj8EzFolm5JJM-ne3yo3vUJS4RPBbIlrMgoHg18IYcDFgthAbxFiaQzK5N5yuM&currency=USD&enable-funding=card,applepay"></script>
+</head>
+<body>
+  <h2>السعر: 2 ريال سعودي</h2>
+  <div id="paypal-button-container"></div>
+
+  <script>
+    // تحويل ريال إلى دولار
+    const exchangeRate = 3.75; // سعر صرف ثابت - يمكن تحديثه ديناميكيًا حسب الحاجة
+    const amountSAR = 2;
+    const amountUSD = (amountSAR / exchangeRate).toFixed(2);
+
+    paypal.Buttons({
+      createOrder: function(data, actions) {
+        return actions.order.create({
+          purchase_units: [{
+            amount: {
+              currency_code: 'USD', // الدفع بالدولار فعلياً
+              value: amountUSD
+            }
+          }]
+        });
+      },
+      onApprove: function(data, actions) {
+        return actions.order.capture().then(function(details) {
+          alert('تم الدفع بواسطة ' + details.payer.name.given_name + '\nالمبلغ: ' + amountSAR + ' ريال سعودي (حوّل وبنفس الوقت بالدولار)');
+        });
+      },
+      onError: function(err) {
+        console.error(err);
+      }
+    }).render('#paypal-button-container');
+  </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>صفحة الدفع - PayPal</title>
+  <style>
+    body {font-family: Arial, sans-serif; background:#f6f7fb; color:#222; padding:20px}
+    .card {background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.06); max-width:820px; margin:20px auto; padding:24px}
+    h1 {font-size:20px; margin-bottom:8px}
+    label{display:block;margin:8px 0}
+    .prices {display:flex;gap:8px;flex-wrap:wrap}
+    .price-btn{padding:10px 14px;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:#fff}
+    .price-btn.active{border-color:#0070ba;background:#eef6ff}
+    .row{display:flex;gap:12px;align-items:center}
+    #paypal-button-container{margin-top:18px}
+    .small{font-size:13px;color:#555}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>اختر طريقة الدفع والمبلغ</h1>
+    <p class="small">مثال صفحة دمج دفع عبر PayPal — يمكنك تعديل العملة والمفاتيح كما هو موضح في التعليقات.</p>
+
+    <div>
+      <label>المبلغ:</label>
+      <div class="prices" id="prices">
+        <button class="price-btn" data-amount="5">$5</button>
+        <button class="price-btn" data-amount="10">$10</button>
+        <button class="price-btn" data-amount="25">$25</button>
+        <button class="price-btn" data-amount="50">$50</button>
+        <button class="price-btn" data-amount="custom">مخصص</button>
+      </div>
+      <input type="number" id="custom-amount" placeholder="اكتب المبلغ هنا" style="margin-top:8px;padding:8px;border-radius:6px;border:1px solid #ddd;display:none;width:150px">
+    </div>
+
+    <div style="margin-top:14px">
+      <label>طريقة الدفع:</label>
+      <div class="row">
+        <label><input type="radio" name="method" value="paypal" checked> PayPal</label>
+        <label><input type="radio" name="method" value="card"> بطاقة (عن طريق PayPal)</label>
+      </div>
+    </div>
+
+    <div id="paypal-button-area" style="margin-top:18px">
+      <!-- زر PayPal سيظهر هنا -->
+      <div id="paypal-button-container"></div>
+    </div>
+
+    <p class="small" style="margin-top:14px">ملاحظة: هذا المثال يستخدم PayPal JavaScript SDK على الواجهة فقط. من الأفضل إنشاء تحقق وتأكيد على الخادم (server-side) للتحقق من المدفوعات وتأمين العمليات.</p>
+  </div>
+
+
+  <!--
+    تعليمات سريعة:
+    1) استبدل YOUR_PAYPAL_CLIENT_ID بمعرّف العميل (Client ID) الخاص بك من PayPal (أو Sandbox client-id أثناء الاختبار).
+    2) غيّر العملة في رابط SDK (currency=USD) إذا أردت، مثلاً "currency=SAR" غير مدعوم دائماً في جميع الحسابات -> تحقق من حسابك.
+    3) بعد الدفع، في onApprove يتم توجيه المستخدم إلى صفحة PayPal الخاصة بك. يمكنك تغيير window.location.href إلى صفحة "شكراً" في موقعك.
+    4) للاستخدام الحقيقي: قم بإنشاء endpoint على الخادم للتحقق من تفاصيل الدفع (Webhook أو تحقق عبر Orders API) لتأكيد الاستلام قبل تفعيل أي خدمة.
+  -->
+
+  <!-- أضف الـ client-id الخاص بك هنا -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AU9Oy-vEKX2p7SOuYHS97HhhFW22Er17GNE-Zh_lLtzydnJFnV6OtkmcD142qzJbKYgfwS1xhb31UGmO" data-sdk-integration-source="button-factory"></script>
+
+  <script>
+    // واجهة اختيار المبلغ
+    const priceButtons = document.querySelectorAll('.price-btn');
+    const customInput = document.getElementById('custom-amount');
+    let selectedAmount = '10'; // قيمة افتراضية
+
+    priceButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        priceButtons.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const v = btn.getAttribute('data-amount');
+        if (v === 'custom') {
+          customInput.style.display = 'inline-block';
+          customInput.focus();
+          selectedAmount = '';
+        } else {
+          customInput.style.display = 'none';
+          selectedAmount = v;
+        }
+        renderPayPalButtons();
+      });
+    });
+
+    customInput.addEventListener('input', () => {
+      selectedAmount = customInput.value;
+      renderPayPalButtons();
+    });
+
+    // رندر PayPal Buttons مع أخذ المبلغ المحدد
+    let paypalButtonsRendered = false;
+    function renderPayPalButtons(){
+      // إذا زر تم رندر مسبقاً، نعيد إنشاء الحاوية
+      const container = document.getElementById('paypal-button-container');
+      container.innerHTML = '';
+
+      // حرصاً على أن يكون المبلغ رقمياً وصالحاً
+      const amountValue = parseFloat(selectedAmount || document.querySelector('.price-btn.active')?.dataset.amount || 10);
+      if (!amountValue || amountValue <= 0) {
+        container.innerHTML = '<div class="small">يرجى اختيار مبلغ صالح للمتابعة.</div>';
+        return;
+      }
+
+      paypal.Buttons({
+        style: { layout: 'vertical', color: 'blue', shape: 'rect', label: 'paypal' },
+        createOrder: function(data, actions) {
+          // يحدد المبلغ الذي سيدفعه العميل
+          return actions.order.create({
+            purchase_units: [{
+              amount: { value: amountValue.toFixed(2) }
+            }]
+          });
+        },
+        onApprove: function(data, actions) {
+          // عند الموافقة من قبل العميل
+          return actions.order.capture().then(function(details) {
+            // هنا يمكنك إرسال تفاصيل الدفع لسيرفرك للتحقق من المعاملة وتخزينها
+            // بعد الحفظ أو التحقق يمكنك تحويل المستخدم إلى صفحة "شكراً" أو إلى حساب PayPal الخاص بك
+
+            // مثال: إعادة التوجيه إلى صفحة بايبال (حسابك) - يمكنك تغييره
+            window.location.href = 'https://www.paypal.com/myaccount/summary';
+
+            // أو إعادة التوجيه لصفحة شكراً داخل موقعك:
+            // window.location.href = '/thank-you.html?orderID=' + data.orderID;
+          });
+        },
+        onCancel: function (data) {
+          // تعامل عند إلغاء الدفع
+          alert('تم إلغاء الدفع');
+        },
+        onError: function(err){
+          console.error(err);
+          alert('حدث خطأ أثناء معالجة الدفع.');
+        }
+      }).render('#paypal-button-container');
+
+      paypalButtonsRendered = true;
+    }
+
+    // تهيئة افتراضية
+    document.querySelector('.price-btn[data-amount="10"]').classList.add('active');
+    renderPayPalButtons();
+  </script>
+</body>
+</html>
