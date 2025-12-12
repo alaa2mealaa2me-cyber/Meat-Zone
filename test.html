@@ -2,10 +2,6 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-
-addMsg("⚠️ افتح الصفحة في نافذة جديدة لاستخدام المايك");
-
-
 <title>مساعد الحروف الذكي</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&display=swap" rel="stylesheet">
@@ -75,13 +71,8 @@ body{
   font-size:16px;
 }
 
-#micBtn{
-  background:#D4EFDF;
-}
-
-#sendBtn{
-  background:#AED6F1;
-}
+#micBtn{ background:#D4EFDF; }
+#sendBtn{ background:#AED6F1; }
 </style>
 </head>
 
@@ -91,7 +82,7 @@ body{
   <div id="aiHeader">🤖 مساعد الحروف الذكي</div>
 
   <div id="messages">
-    <div class="msg">👋 اضغط على 🎤 وتكلم أو اكتب الإجابة</div>
+    <div class="msg">👋 اضغط 🎤 وتحدث أو اكتب الإجابة</div>
   </div>
 
   <div id="controls">
@@ -103,7 +94,7 @@ body{
 
 <script>
 /* ===============================
-   🧠 قاعدة البيانات التعليمية
+   🧠 قاعدة البيانات
 ================================ */
 const letterRules = {
   "ث": ["ثعلب"],
@@ -121,45 +112,40 @@ const letterRules = {
   "س": ["سيارة"]
 };
 
-/* 🔤 الحرف الحالي (غيّره من صفحتك) */
 let currentLetter = "ث";
 
 /* ===============================
-   🎤 المايك (مصَحَّح 100%)
+   🔊 تهيئة الصوت (مهم جدًا)
+================================ */
+let arabicVoice = null;
+
+speechSynthesis.onvoiceschanged = () => {
+  const voices = speechSynthesis.getVoices();
+  arabicVoice = voices.find(v => v.lang.startsWith("ar")) || null;
+};
+
+/* ===============================
+   🎤 المايك
 ================================ */
 function startMic(){
-
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (!SpeechRecognition) {
-    addMsg("❌ المتصفح لا يدعم المايك. استخدم Chrome على الكمبيوتر.");
-    speak("المتصفح لا يدعم المايك");
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    speak("المتصفح لا يدعم المايك، استخدم كروم على الكمبيوتر");
     return;
   }
 
-  const recognition = new SpeechRecognition();
-  recognition.lang = "ar-SA";
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
+  const rec = new SR();
+  rec.lang = "ar-SA";
 
-  recognition.onstart = () => {
-    addMsg("🎤 أستمع إليك الآن...");
-  };
-
-  recognition.onresult = (event) => {
-    const text = event.results[0][0].transcript;
+  rec.onstart = () => addMsg("🎤 أستمع إليك...");
+  rec.onresult = e => {
+    const text = e.results[0][0].transcript;
     document.getElementById("textInput").value = text;
     processInput();
   };
+  rec.onerror = () => speak("لم أسمعك جيدًا، حاول مرة أخرى");
 
-  recognition.onerror = (event) => {
-    addMsg("❌ لم أسمعك جيدًا، حاول مرة أخرى");
-    speak("لم أسمعك جيدًا، حاول مرة أخرى");
-    console.error(event.error);
-  };
-
-  recognition.start();
+  rec.start();
 }
 
 /* ===============================
@@ -172,14 +158,10 @@ function processInput(){
 
   addMsg("🧒 " + text);
 
-  const correctWords = letterRules[currentLetter] || [];
-  let reply = "";
-
-  if(correctWords.includes(text)){
-    reply = "رائع جدًا! إجابة صحيحة، أحسنت يا بطل!";
-  }else{
-    reply = "إجابة خاطئة، حاول مرة أخرى.";
-  }
+  const correct = letterRules[currentLetter] || [];
+  let reply = correct.includes(text)
+    ? "رائع جدًا! إجابة صحيحة، أحسنت يا بطل!"
+    : "إجابة خاطئة، حاول مرة أخرى.";
 
   addMsg("🤖 " + reply);
   speak(reply);
@@ -187,7 +169,7 @@ function processInput(){
 }
 
 /* ===============================
-   💬 عرض الرسائل
+   💬 الرسائل
 ================================ */
 function addMsg(msg){
   const box = document.getElementById("messages");
@@ -199,20 +181,25 @@ function addMsg(msg){
 }
 
 /* ===============================
-   🔊 الرد بالصوت
+   🔊 النطق (مصَحَّح)
 ================================ */
 function speak(text){
+  speechSynthesis.cancel(); // مهم
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "ar-SA";
+  if (arabicVoice) u.voice = arabicVoice;
   speechSynthesis.speak(u);
 }
 
 /* ===============================
-   🔗 ربط مع صفحتك التعليمية
+   🔗 ربط خارجي
 ================================ */
-window.setCurrentLetter = function(letter){
-  currentLetter = letter;
-};
+window.setCurrentLetter = letter => currentLetter = letter;
+
+/* تنبيه لو داخل iframe */
+if (window.self !== window.top) {
+  addMsg("⚠️ افتح الصفحة في نافذة جديدة لاستخدام الصوت");
+}
 </script>
 
 </body>
