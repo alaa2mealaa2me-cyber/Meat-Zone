@@ -76,3 +76,82 @@ body{
     <button onclick="processInput()">➡</button>
   </div>
 </div>
+
+  <script>
+/* 🧠 قاعدة البيانات (تربط مباشرة مع كودك) */
+const letterRules = {
+  "ث": ["ثعلب"],
+  "ح": ["حصان"],
+  "ظ": ["ظرف"],
+  "ب": ["بطة"],
+  "ت": ["تفاحة"],
+  "ش": ["شمس"],
+  "ط": ["طريق"],
+  "م": ["موز"],
+  "ز": ["زرافة"],
+  "ذ": ["ذباب"],
+  "د": ["دب"],
+  "ن": ["نمر"],
+  "س": ["سيارة"]
+};
+
+/* 🧠 حالة النشاط الحالية (يتم تحديثها من صفحتك) */
+let currentLetter = "ث";
+
+/* 🎤 تشغيل المايك */
+function startMic(){
+  const rec = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
+  rec.lang="ar-SA";
+  rec.start();
+  rec.onresult=e=>{
+    document.getElementById("textInput").value=e.results[0][0].transcript;
+    processInput();
+  }
+}
+
+/* 🧠 تحليل الإجابة */
+function processInput(){
+  const text = document.getElementById("textInput").value.trim();
+  if(!text) return;
+
+  addMsg("🧒 "+text);
+
+  let reply="";
+  let correctWords = letterRules[currentLetter] || [];
+
+  if(correctWords.includes(text)){
+    reply="رائع جدًا! إجابة صحيحة، أحسنت!";
+  }else{
+    reply="إجابة خاطئة، حاول مرة أخرى.";
+  }
+
+  addMsg("🤖 "+reply);
+  speak(reply);
+  document.getElementById("textInput").value="";
+}
+
+/* 💬 عرض الرسائل */
+function addMsg(msg){
+  const box=document.getElementById("messages");
+  const d=document.createElement("div");
+  d.className="msg";
+  d.innerText=msg;
+  box.appendChild(d);
+  box.scrollTop=box.scrollHeight;
+}
+
+/* 🔊 صوت الرد */
+function speak(text){
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="ar-SA";
+  speechSynthesis.speak(u);
+}
+
+/* 🔗 دالة تربط مع صفحتك */
+window.setCurrentLetter = function(letter){
+  currentLetter = letter;
+}
+</script>
+
+</body>
+</html>
