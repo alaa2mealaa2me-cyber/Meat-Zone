@@ -45,7 +45,7 @@ async function send(){
   const last = m.lastChild;
 
   try{
-    const r = await fetch("https://YOUR-SERVER-DOMAIN.com/api/chat", {
+    const r = await fetch("https://incomparable-douhua-ae4ae6.netlify.app/", {
       method:"POST",
       headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({ text })
