@@ -1,65 +1,62 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>مساعد الحروف الذكي</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600&display=swap" rel="stylesheet">
-
+<meta charset="utf-8" />
+<title>شات</title>
 <style>
-body{font-family:'Cairo',sans-serif;background:#f7f9fb;}
-#chat{position:fixed;top:20px;right:20px;width:340px;height:520px;background:#fff;
-border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,.2);display:flex;flex-direction:column;}
-#header{background:#1E8449;color:#fff;padding:14px;text-align:center;border-radius:20px 20px 0 0;}
-#msgs{flex:1;padding:10px;overflow-y:auto;}
-.msg{background:#eef3ff;padding:8px;border-radius:12px;margin-bottom:6px;}
-.user{background:#D6EAF8;}
-#input{display:flex;padding:10px;gap:6px;}
-#input input{flex:1;padding:8px;border-radius:10px;border:1px solid #ccc;}
-#input button{border:none;border-radius:10px;padding:8px;background:#AED6F1;}
+  body{font-family:tahoma; background:#f2f5f7; margin:0; padding:20px}
+  #box{max-width:420px; margin:auto; background:#fff; border-radius:16px; box-shadow:0 6px 18px rgba(0,0,0,.15); overflow:hidden}
+  #h{background:#1E8449; color:#fff; padding:12px; text-align:center; font-weight:bold}
+  #m{height:420px; overflow:auto; padding:12px}
+  .msg{background:#eef3ff; padding:10px 12px; border-radius:12px; margin:8px 0; white-space:pre-wrap}
+  .me{background:#d6eaf8}
+  #c{display:flex; gap:8px; padding:12px; border-top:1px solid #eee}
+  input{flex:1; padding:10px; border-radius:10px; border:1px solid #ccc}
+  button{padding:10px 14px; border:0; border-radius:10px; background:#AED6F1; cursor:pointer}
 </style>
 </head>
-
 <body>
 
-<div id="chat">
-  <div id="header">🤖 مساعدك الذكي</div>
-  <div id="msgs">
-    <div class="msg">👋 اسألني أي سؤال</div>
-  </div>
-  <div id="input">
-    <input id="q" placeholder="اكتب سؤالك..." onkeydown="if(event.key==='Enter') ask()">
-    <button onclick="ask()">إرسال</button>
+<div id="box">
+  <div id="h">🤖 شات</div>
+  <div id="m"><div class="msg">اسأل أي سؤال…</div></div>
+  <div id="c">
+    <input id="t" placeholder="اكتب هنا..." onkeydown="if(event.key==='Enter')send()">
+    <button onclick="send()">إرسال</button>
   </div>
 </div>
 
 <script>
-const API_URL = "https://YOUR-WORKER-URL.workers.dev";
-
-async function ask(){
-  const input = document.getElementById("q");
-  const text = input.value.trim();
-  if(!text) return;
-
-  addMsg("🧒 "+text, "user");
-  input.value = "";
-
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type":"application/json" },
-    body: JSON.stringify({ message: text })
-  });
-
-  const data = await res.json();
-  addMsg("🤖 "+data.reply);
-}
-
-function addMsg(text, cls=""){
-  const box=document.getElementById("msgs");
+const m = document.getElementById("m");
+function add(text, cls=""){
   const d=document.createElement("div");
   d.className="msg "+cls;
-  d.innerText=text;
-  box.appendChild(d);
-  box.scrollTop=box.scrollHeight;
+  d.textContent=text;
+  m.appendChild(d);
+  m.scrollTop=m.scrollHeight;
+}
+async function send(){
+  const t=document.getElementById("t");
+  const text=t.value.trim();
+  if(!text) return;
+  add("🧒 "+text, "me");
+  t.value="";
+  add("⏳ ...");
+  const last = m.lastChild;
+
+  try{
+    const r = await fetch("https://YOUR-SERVER-DOMAIN.com/api/chat", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ text })
+    });
+    const data = await r.json();
+    last.remove();
+    add("🤖 " + (data.reply || "لا يوجد رد"));
+  }catch(e){
+    last.remove();
+    add("❌ خطأ اتصال");
+  }
 }
 </script>
 
