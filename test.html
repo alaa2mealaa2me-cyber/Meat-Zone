@@ -13,7 +13,7 @@ body{
   font-family:'Cairo',sans-serif;
 }
 
-#aiBot{
+#chatBot{
   position:fixed;
   top:20px;
   right:20px;
@@ -26,7 +26,7 @@ body{
   flex-direction:column;
 }
 
-#aiHeader{
+#header{
   background:#1E8449;
   color:#fff;
   padding:16px;
@@ -49,6 +49,14 @@ body{
   margin-bottom:8px;
 }
 
+.user{
+  background:#D6EAF8;
+}
+
+.bot{
+  background:#E8F8F5;
+}
+
 #controls{
   display:flex;
   gap:6px;
@@ -66,139 +74,84 @@ body{
 #controls button{
   border:none;
   border-radius:12px;
-  padding:10px 12px;
+  padding:10px 14px;
   cursor:pointer;
   font-size:16px;
+  background:#AED6F1;
 }
-
-#micBtn{ background:#D4EFDF; }
-#sendBtn{ background:#AED6F1; }
 </style>
 </head>
 
 <body>
 
-<div id="aiBot">
-  <div id="aiHeader">🤖 مساعد الحروف الذكي</div>
+<div id="chatBot">
+  <div id="header">🤖 مساعد الحروف الذكي</div>
 
   <div id="messages">
-    <div class="msg">👋 اضغط 🎤 وتحدث أو اكتب الإجابة</div>
+    <div class="msg bot">👋 مرحبًا! اسألني أي سؤال 👇</div>
   </div>
 
   <div id="controls">
-    <button id="micBtn" onclick="startMic()">🎤</button>
-    <input id="textInput" placeholder="قل أو اكتب الكلمة">
-    <button id="sendBtn" onclick="processInput()">➡</button>
+    <input id="textInput" placeholder="اكتب سؤالك هنا..." onkeydown="if(event.key==='Enter') sendMessage()">
+    <button onclick="sendMessage()">إرسال</button>
   </div>
 </div>
 
 <script>
-/* ===============================
-   🧠 قاعدة البيانات
-================================ */
-const letterRules = {
-  "ث": ["ثعلب"],
-  "ح": ["حصان"],
-  "ظ": ["ظرف"],
-  "ب": ["بطة"],
-  "ت": ["تفاحة"],
-  "ش": ["شمس"],
-  "ط": ["طريق"],
-  "م": ["موز"],
-  "ز": ["زرافة"],
-  "ذ": ["ذباب"],
-  "د": ["دب"],
-  "ن": ["نمر"],
-  "س": ["سيارة"]
-};
+/* 🧠 قاعدة معرفة بسيطة (قابلة للتوسيع) */
+function getBotReply(question){
 
-let currentLetter = "ث";
+  question = question.trim();
 
-/* ===============================
-   🔊 تهيئة الصوت (مهم جدًا)
-================================ */
-let arabicVoice = null;
-
-speechSynthesis.onvoiceschanged = () => {
-  const voices = speechSynthesis.getVoices();
-  arabicVoice = voices.find(v => v.lang.startsWith("ar")) || null;
-};
-
-/* ===============================
-   🎤 المايك
-================================ */
-function startMic(){
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    speak("المتصفح لا يدعم المايك، استخدم كروم على الكمبيوتر");
-    return;
+  if(question.includes("حرف")){
+    return "الحرف هو شكل نكتبه وننطق صوته.";
   }
 
-  const rec = new SR();
-  rec.lang = "ar-SA";
+  if(question.includes("ث")){
+    return "كلمة تبدأ بحرف ث: ثعلب 🦊";
+  }
 
-  rec.onstart = () => addMsg("🎤 أستمع إليك...");
-  rec.onresult = e => {
-    const text = e.results[0][0].transcript;
-    document.getElementById("textInput").value = text;
-    processInput();
-  };
-  rec.onerror = () => speak("لم أسمعك جيدًا، حاول مرة أخرى");
+  if(question.includes("ت")){
+    return "كلمة تبدأ بحرف ت: تفاحة 🍎";
+  }
 
-  rec.start();
+  if(question.includes("ب")){
+    return "كلمة تبدأ بحرف ب: بطة 🦆";
+  }
+
+  if(question.includes("كيف")){
+    return "فكّر في الحرف ثم اختر الكلمة التي تبدأ به.";
+  }
+
+  if(question.includes("صح")){
+    return "إذا كانت الكلمة تبدأ بنفس الحرف، فالإجابة صحيحة 👍";
+  }
+
+  return "حاول أن تسأل عن حرف أو كلمة من النشاط 🙂";
 }
 
-/* ===============================
-   🧠 تحليل الإجابة
-================================ */
-function processInput(){
+/* 💬 إرسال الرسالة */
+function sendMessage(){
   const input = document.getElementById("textInput");
   const text = input.value.trim();
   if(!text) return;
 
-  addMsg("🧒 " + text);
+  addMessage("🧒 " + text, "user");
 
-  const correct = letterRules[currentLetter] || [];
-  let reply = correct.includes(text)
-    ? "رائع جدًا! إجابة صحيحة، أحسنت يا بطل!"
-    : "إجابة خاطئة، حاول مرة أخرى.";
+  const reply = getBotReply(text);
+  addMessage("🤖 " + reply, "bot");
 
-  addMsg("🤖 " + reply);
-  speak(reply);
   input.value = "";
 }
 
-/* ===============================
-   💬 الرسائل
-================================ */
-function addMsg(msg){
+/* 💬 عرض الرسائل */
+function addMessage(text, type){
   const box = document.getElementById("messages");
   const div = document.createElement("div");
-  div.className = "msg";
-  div.innerText = msg;
+  div.className = "msg " + type;
+  div.innerText = text;
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
-}
-
-/* ===============================
-   🔊 النطق (مصَحَّح)
-================================ */
-function speak(text){
-  speechSynthesis.cancel(); // مهم
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "ar-SA";
-  if (arabicVoice) u.voice = arabicVoice;
-  speechSynthesis.speak(u);
-}
-
-/* ===============================
-   🔗 ربط خارجي
-================================ */
-window.setCurrentLetter = letter => currentLetter = letter;
-
-/* تنبيه لو داخل iframe */
-if (window.self !== window.top) {
-  addMsg("⚠️ افتح الصفحة في نافذة جديدة لاستخدام الصوت");
 }
 </script>
 
